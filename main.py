@@ -1,26 +1,30 @@
 import streamlit as st
-import folium
-from streamlit_folium import st_folium
+import plotly.graph_objects as go
+import pandas as pd
 
-st.title("🗺️ 나만의 위치 북마크 지도")
+# 샘플 데이터 생성
+data = {
+    "Age Group": ["0-4", "5-9", "10-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80+"],
+    "Male": [-500, -600, -700, -800, -900, -950, -900, -850, -800, -750, -700, -650, -600, -550, -500, -450, -400],
+    "Female": [480, 580, 680, 780, 880, 930, 880, 830, 780, 730, 680, 630, 580, 530, 480, 430, 380]
+}
 
-st.write("아래에 장소 정보를 입력하고 지도에 표시해보세요!")
+df = pd.DataFrame(data)
 
-# 장소 입력
-place = st.text_input("장소 이름", value="서울 시청")
-lat = st.number_input("위도 (Latitude)", value=37.5665, format="%.6f")
-lon = st.number_input("경도 (Longitude)", value=126.9780, format="%.6f")
+# 그래프 생성
+fig = go.Figure()
+fig.add_trace(go.Bar(y=df["Age Group"], x=df["Male"], orientation='h', name="Male", marker_color='blue'))
+fig.add_trace(go.Bar(y=df["Age Group"], x=df["Female"], orientation='h', name="Female", marker_color='red'))
 
-# 세션 상태 저장
-if "places" not in st.session_state:
-    st.session_state.places = []
+fig.update_layout(
+    title="인구 구조 피라미드",
+    barmode="relative",
+    bargap=0.1,
+    xaxis=dict(title="Population", tickvals=[-1000, -500, 0, 500, 1000], ticktext=["1000", "500", "0", "500", "1000"]),
+    yaxis=dict(title="Age Group"),
+    template="plotly_white"
+)
 
-if st.button("지도에 추가하기"):
-    st.session_state.places.append((place, lat, lon))
-
-# 지도 그리기
-m = folium.Map(location=[37.5665, 126.9780], zoom_start=6)
-for name, lat, lon in st.session_state.places:
-    folium.Marker([lat, lon], tooltip=name).add_to(m)
-
-st_folium(m, width=700, height=500)
+# Streamlit에서 그래프 표시
+st.title("인구 구조 피라미드")
+st.plotly_chart(fig)
